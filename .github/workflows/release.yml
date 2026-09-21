@@ -23,9 +23,7 @@ jobs:
           cache: pip
       - run: pip install -e ".[dev]"
       - run: pytest -q
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - uses: pnpm/action-setup@v4   # version comes from package.json's packageManager field
       - uses: actions/setup-node@v4
         with:
           node-version: 22
