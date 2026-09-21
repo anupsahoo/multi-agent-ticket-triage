@@ -23,6 +23,11 @@ handoff/*.json
 !handoff/.gitkeep
 .DS_Store
 
-# editor and tool-generated files
-CLAUDE.md
+# editors and coding assistants (next dev scaffolds AGENTS.md / *.md rule files)
+.idea/
+.vscode/
+.cursor/
+.windsurf/
 AGENTS.md
+CLAUDE.md
+GEMINI.md
