@@ -6,11 +6,16 @@ A support message arrives. A router classifies it, one of three specialist agent
 | --- | --- |
 | Engine | Python 3.11+, LangGraph 1.x, LangChain Core, Pydantic 2 |
 | Console | Next.js 16, React 19, TypeScript, Tailwind 4 |
-| Tests | 19, offline, under one second |
+| Tests | 22, offline, under one second |
+| Eval | `python run.py --eval` scores any configured model per step on a fixed labelled set; CI enforces the baseline floor |
 | Screens | 7 in the sidebar, plus a ticket detail page |
 | API | 10 endpoints, standard library only |
-| Deploy target | One Vercel project: Next.js at the root, Python function at `api/index.py` |
+| Live console (optional) | https://multi-agent-ticket-triage.vercel.app — one Vercel project: Next.js at the root, Python function at `api/index.py` |
 | Keys required | None |
+
+## Scope
+
+The brief's deliverable is the engine: `triage/` (graph, agents, connectors, decision layer), `run.py`, `tests/` and `samples/`. Everything else — the JSON API, the console and the Vercel deployment — is additive. It shares no code with the graph, no test the brief asks for depends on it, and it exists so a reviewer can watch routing decisions and failure paths happen instead of reading logs. Remove `src/`, `api/` and `server.py` and the deliverable is intact. The brief also asks which model was used and why; the answer is under [Which model, and why](#which-model-and-why), and the evidence is the [evaluation log](samples/eval.md).
 
 ## Quick start
 
@@ -18,7 +23,7 @@ A support message arrives. A router classifies it, one of three specialist agent
 | --- | --- | --- |
 | Engine and CLI only | `python3.11 -m venv .venv && . .venv/bin/activate`<br>`pip install -e ".[dev]"`<br>`python run.py "I was charged twice for invoice INV-1002"`<br>`python run.py --file samples/tickets.txt`<br>`python run.py --summary` | One ticket through the graph with its trail printed; all eight sample tickets; the evaluation summary over `runs/runs.jsonl` |
 | Engine and console | `./dev.sh` | Creates `.venv` and installs `node_modules` if missing, starts the engine on `:8765` (seeding 80 tickets through the real graph on first run) and the console on `:3000`. Ctrl-C stops both |
-| Tests | `. .venv/bin/activate && pytest -q` | 19 tests against the stub classifier, stub language model and mock connectors |
+| Tests | `. .venv/bin/activate && pytest -q` | 22 tests against the stub classifier, stub language model and mock connectors |
 
 The engine alone can also be started with `python server.py`; the console alone with `pnpm dev`. Optional providers are switched on by environment variables listed in `.env.example`; with none set, decisions come from keyword rules and replies from templates.
 
@@ -209,6 +214,12 @@ Routing is a classification problem: three options, one answer, and a threshold 
 
 Selection is by environment at start-up (`make_classifier`, `make_llm`), so a running desk cannot silently switch models. The Settings screen shows the active providers read-only.
 
+### Which model, and why
+
+The system is model-agnostic by design. `LLM_MODEL` accepts any LangChain provider string and `init_chat_model` builds it (`triage/llm.py`); decisions go through the `Classifier` protocol. The model is configuration, not code, and no vendor SDK is imported anywhere in `triage/`.
+
+Which model to run is therefore an evaluation result, not a preference. `python run.py --eval` scores whatever is configured on the fixed labelled set, step by step, and `--record` appends the row to [`samples/eval.md`](samples/eval.md). The stub row is the baseline: it needs no key, every test runs against it, and CI holds it at 1.00 on every step so the graph's seams cannot regress unnoticed. A candidate model earns its row the same way and is judged on the written floors, never on one number. The calibrated Jev classifier (`JevClassifier`) is wired for the same reason — a threshold only means what it says against a calibrated probability — and is switched on by `TYPESAFE_API_KEY`.
+
 ## Connectors
 
 ```mermaid
@@ -324,7 +335,9 @@ curl -s -X POST localhost:8765/api/tickets -H 'content-type: application/json' -
 
 The store seeds 80 tickets on first start by running templated messages through the real graph with a fixed random seed, so every environment starts with the same history and every seeded ticket has a genuine trail.
 
-## Logging and evaluation
+## Evaluation
+
+### The run log
 
 `run.py` appends one JSON line per run to `runs/runs.jsonl` (`triage/logging.py`). `runs/example.jsonl` is a committed example.
 
@@ -340,9 +353,44 @@ The store seeds 80 tickets on first start by running templated messages through 
 
 `python run.py --summary` reads the file back and prints run count, status split, intent split, tool call counts and mean and maximum latency. The console does not read this file; its Analytics screen computes the same categories (status split, intent split, per-tool ok/failed, latency) from the ticket store through `GET /api/stats`, which also buckets free-text escalation reasons into `tool error`, `not found`, `low confidence`, `missing info`, `routing loop`, `weak draft` and `other`.
 
+### Scoring the chain, not the model
+
+A ticket passes through four decisions — intent, tool, arguments, outcome — and a review that signs them off one at a time never sees the number that matters: their product. Five steps at 85% each is a 44% system. `triage/eval.py` scores each step on the fixed labelled set (`samples/labelled.jsonl`: eight tickets with expected intent, tool, arguments and status), multiplies them into a **system** number shown beside the best step, and separately counts **confident-wrong**: tickets that resolved when the label says escalate, or resolved under the wrong intent — the failure that logs itself as success, and the count to read first.
+
+```text
+python run.py --eval [--record] [--floor routing=1 --floor confident_wrong=0 ...]
+```
+
+| Output | Meaning |
+| --- | --- |
+| `routing`, `tool`, `args`, `outcome` | Per-step accuracy on the set |
+| `system` | Product of the four; a ticket's chance of passing every step |
+| `confident-wrong` | Count and ids of resolved-but-should-not-have |
+| `escalations`, `p95 ms` | Escalation share and 95th-percentile latency — the tail, not the mean |
+| `set` | Hash of the labelled file, so a row always says which set it was scored on and a changed set is never silently compared |
+
+`--record` appends the row to [`samples/eval.md`](samples/eval.md), which also holds the column definitions and the floors. `--floor` turns the run into a gate: CI runs the stub baseline with every step floored at 1.00 and confident-wrong at 0 on every push, so the deterministic path is a regression check on the graph itself, not a flaky model test.
+
+The gates inside the graph are the same idea applied at the seams: the domain-fit check runs after the tool call and before the draft, the resolution check runs before anything is sent, and each has a threshold a person can read. Checks between steps, not only at the end.
+
+### If I had more time, I would
+
+| Change | Why |
+| --- | --- |
+| Make the human gate the teacher | Every ticket an L2 operator corrects — wrong intent, wrong tool, should not have resolved — becomes a new labelled case, captured in the console at the moment of correction. The gate stops being a brake and becomes the source of the eval set |
+| Score the seams, not the agents | Each handoff (router → specialist, specialist → specialist, specialist → escalation) gets its own labelled sub-set and its own row, because a chain fails at handoffs while every part passes on its own |
+| Watch the slope, not the number | Re-run the fixed set weekly against the same model and plot each step over time. A drop is investigated in order: how it was measured, what it measured, then the model — most regressions are a measurement change |
+| Evaluate the evaluator | The resolution gate uses a model as a judge under `llm` decisions; a small human-labelled set re-run whenever the judge prompt or model changes, so the judge's drift is measured rather than assumed |
+| Calibrate the thresholds per model | 0.60 / 0.50 / 0.70 are hand-picked. A few hundred labelled tickets and a sweep give precision and escalation rate at each value, and the chosen thresholds become columns in the eval row |
+| Write down what each agent must refuse | A negative set per specialist — tickets it must hand back — scored beside the positive one, so tool scoping is measured, not documented |
+| Name an owner per metric | An owner column in the eval log: one person, not a team, who answers when a number moves |
+| Adopt a model only after all of the above | Never on the mean, never on one run |
+
+And outside evaluation: route all three specialists through model tool calling once a reference model is measured (direct extraction was chosen for determinism before any model had run); one document per ticket instead of one whole document; a checkpointer so an escalated ticket pauses and resumes; the console last.
+
 ## Tests
 
-`pytest -q` runs 19 tests against `StubClassifier`, `StubLLM` and the mock connectors, with handoff files redirected to a temporary directory. `make_app(**overrides)` in `tests/conftest.py` builds a graph whose classifier returns forced values, so the resolution gate and hop limit can be tested without special-casing the rules.
+`pytest -q` runs 22 tests against `StubClassifier`, `StubLLM` and the mock connectors, with handoff files redirected to a temporary directory. `make_app(**overrides)` in `tests/conftest.py` builds a graph whose classifier returns forced values, so the resolution gate and hop limit can be tested without special-casing the rules.
 
 Graph paths, `tests/test_graph.py`:
 
@@ -377,6 +425,14 @@ Connectors, `tests/test_connectors.py`:
 | --- | --- |
 | `test_store_persists_across_instances` | A ticket run on one store instance is loaded by a fresh instance on the same backend |
 | `test_refresh_picks_up_another_writer` | Two live stores on one backend: a write on A is visible on B after `refresh()`, and A does not re-read its own write |
+
+`tests/test_eval.py` — the evaluation harness
+
+| Test | What it proves |
+| --- | --- |
+| `test_stub_baseline_is_a_fixed_point` | The committed labelled set scores 1.00 on every step against the stub, with 0 confident-wrong; this pins `samples/` to the code and is what CI floors |
+| `test_wrong_expectation_lowers_the_step_and_the_system` | One mislabelled tool drops tool and argument accuracy to 0.875 each and the system number to 0.766 — lower than any single step |
+| `test_resolving_when_told_to_escalate_is_confident_wrong` | A resolve where the label says escalate is counted, named by id, and trips the `confident_wrong` floor |
 
 Every escalation test also asserts the shared invariant: a reason is set, a `HANDOFF-` reference exists, the last tool call is a successful `create_handoff`, and `resolution` is null.
 
@@ -438,7 +494,7 @@ Continuous integration, `.github/workflows/`:
 
 | Limitation | What would be done next |
 | --- | --- |
-| Thresholds are uncalibrated | Label a set of tickets, sweep each threshold, and report precision and escalation rate at each point before choosing |
+| Thresholds are uncalibrated | The eval harness is the instrument: label a larger set, sweep each threshold per model, and record precision and escalation rate at each value in `samples/eval.md` before choosing |
 | Escalation ends the run | Add a LangGraph checkpointer so the ticket pauses at escalation and resumes from the same state when a person supplies the missing identifier |
 | Any tool error escalates immediately | A per-tool retry policy: one retry with backoff for timeouts, none for `not_found` or `invalid_args` |
 | GitHub search is a shape | Issue search on a public repository needs no authentication and is about twenty lines with `httpx`; left out so the demo has no network dependency |
@@ -463,6 +519,8 @@ Continuous integration, `.github/workflows/`:
 │   └── tickets.json              ticket store when no Blob token is set (ignored by git)
 ├── samples/
 │   ├── tickets.txt               eight tickets, one per path
+│   ├── labelled.jsonl            the same eight with expected intent, tool, arguments and status
+│   ├── eval.md                   evaluation log: column definitions, floors, one row per scored model
 │   ├── all_runs.md               captured output of all eight
 │   ├── run_billing_resolved.md
 │   ├── run_escalation_not_found.md
@@ -475,7 +533,9 @@ Continuous integration, `.github/workflows/`:
 ├── tests/
 │   ├── conftest.py               stub graph fixtures; handoff redirected to a temp dir
 │   ├── test_graph.py             11 graph-path tests
-│   └── test_connectors.py        6 connector tests
+│   ├── test_connectors.py        6 connector tests
+│   ├── test_store.py             2 store tests: persistence and cross-instance refresh
+│   └── test_eval.py              3 harness tests: baseline fixed point, compounding, confident-wrong
 ├── triage/
 │   ├── agents/
 │   │   ├── common.py             the specialist skeleton and route_after_specialist
@@ -496,6 +556,7 @@ Continuous integration, `.github/workflows/`:
 │   ├── api.py                    Engine, stats, dispatch
 │   ├── classifier.py             Jev, LLM and stub classifiers behind one protocol
 │   ├── config.py                 the four thresholds
+│   ├── eval.py                   per-step scoring, system product, confident-wrong, floors
 │   ├── graph.py                  build_graph: nodes and conditional edges
 │   ├── llm.py                    ChatModelLLM and StubLLM behind one protocol
 │   ├── logging.py                runs.jsonl record and summary

@@ -3,6 +3,14 @@
 All notable changes to this project are recorded here. Releases are tagged
 `vMAJOR.MINOR.PATCH`; the Release workflow publishes notes for each tag.
 
+## [1.1.0] — Evaluation
+
+- `run.py --eval`: scores any configured model per step (routing, tool, arguments, outcome) on a fixed labelled set, multiplies them into a system number, counts confident-wrong tickets, reports p95 latency, and ties each row to the labelled set's hash.
+- `--floor` turns a run into a gate; CI holds the stub baseline at 1.00 on every step.
+- `samples/labelled.jsonl` and `samples/eval.md` (column definitions, floors, rows).
+- README: scope, which model and why, evaluation, and what would be done with more time.
+- Twenty-two offline tests.
+
 ## [1.0.0] — Initial release
 
 - LangGraph triage graph: router, billing / technical / general specialists, human handoff.
