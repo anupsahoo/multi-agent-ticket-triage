@@ -167,6 +167,7 @@ def engine() -> Engine:
 def dispatch(method: str, path: str, query: dict[str, str], body: dict) -> Response:
     """Route one request. Paths are matched after stripping a trailing slash."""
     e = engine()
+    e.store.refresh()   # other function instances may have written since this one last looked
     p = path.rstrip("/")
     parts = p.split("/")   # "/api/tickets/T-1" -> ["", "api", "tickets", "T-1"]
 

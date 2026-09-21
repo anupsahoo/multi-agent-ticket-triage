@@ -18,7 +18,7 @@ A support message arrives. A router classifies it, one of three specialist agent
 | --- | --- | --- |
 | Engine and CLI only | `python3.11 -m venv .venv && . .venv/bin/activate`<br>`pip install -e ".[dev]"`<br>`python run.py "I was charged twice for invoice INV-1002"`<br>`python run.py --file samples/tickets.txt`<br>`python run.py --summary` | One ticket through the graph with its trail printed; all eight sample tickets; the evaluation summary over `runs/runs.jsonl` |
 | Engine and console | `./dev.sh` | Creates `.venv` and installs `node_modules` if missing, starts the engine on `:8765` (seeding 80 tickets through the real graph on first run) and the console on `:3000`. Ctrl-C stops both |
-| Tests | `. .venv/bin/activate && pytest -q` | 17 tests against the stub classifier, stub language model and mock connectors |
+| Tests | `. .venv/bin/activate && pytest -q` | 19 tests against the stub classifier, stub language model and mock connectors |
 
 The engine alone can also be started with `python server.py`; the console alone with `pnpm dev`. Optional providers are switched on by environment variables listed in `.env.example`; with none set, decisions come from keyword rules and replies from templates.
 
@@ -342,7 +342,7 @@ The store seeds 80 tickets on first start by running templated messages through 
 
 ## Tests
 
-`pytest -q` runs 17 tests against `StubClassifier`, `StubLLM` and the mock connectors, with handoff files redirected to a temporary directory. `make_app(**overrides)` in `tests/conftest.py` builds a graph whose classifier returns forced values, so the resolution gate and hop limit can be tested without special-casing the rules.
+`pytest -q` runs 19 tests against `StubClassifier`, `StubLLM` and the mock connectors, with handoff files redirected to a temporary directory. `make_app(**overrides)` in `tests/conftest.py` builds a graph whose classifier returns forced values, so the resolution gate and hop limit can be tested without special-casing the rules.
 
 Graph paths, `tests/test_graph.py`:
 
@@ -371,6 +371,13 @@ Connectors, `tests/test_connectors.py`:
 | `test_real_connector_shapes_report_not_configured` | Binding `issues.search` to `jira` without credentials yields `error = "not_configured: ..."` |
 | `test_custom_connector_plugs_in_and_the_agent_uses_it` | A throwaway `AcmeConnector` bound to `issues.search` is used by the technical agent end to end with no agent code changed |
 
+`tests/test_store.py` — the ticket store behind the console
+
+| Test | What it proves |
+| --- | --- |
+| `test_store_persists_across_instances` | A ticket run on one store instance is loaded by a fresh instance on the same backend |
+| `test_refresh_picks_up_another_writer` | Two live stores on one backend: a write on A is visible on B after `refresh()`, and A does not re-read its own write |
+
 Every escalation test also asserts the shared invariant: a reason is set, a `HANDOFF-` reference exists, the last tool call is a successful `create_handoff`, and `resolution` is null.
 
 ## Deployment
@@ -389,6 +396,8 @@ flowchart LR
 One Vercel project serves both halves. `vercel.json` sets `framework: nextjs`, `installCommand: pnpm install --frozen-lockfile`, and a 30-second `maxDuration` for `api/index.py`. Vercel detects the Python function and installs `requirements.txt` (the three runtime dependencies, kept in sync with `pyproject.toml`). The rewrite in `next.config.ts` sends `/api/:path*` to the local Python server in development and to `/api/` in production; the function receives the original path, so `triage/api.py` routes identically in both. Server components resolve the engine address once in `src/lib/engine.ts`: `NEXT_PUBLIC_ENGINE_URL` if set; on Vercel the production domain (`VERCEL_PROJECT_PRODUCTION_URL`) in production and the deployment URL (`VERCEL_URL`) otherwise; else `127.0.0.1:8765`. The production domain is used deliberately: per-deployment URLs sit behind Deployment Protection, which would answer a server-side fetch with a login page. Preview deployments set `VERCEL_AUTOMATION_BYPASS_SECRET`, which `engine.ts` forwards as `x-vercel-protection-bypass`.
 
 Persistence follows the environment (`triage/persistence.py`): with `BLOB_READ_WRITE_TOKEN` set, which Vercel does when a Blob store is attached, the ticket document lives in Vercel Blob at `triage/tickets.json` and is read and written over the Blob REST API with `urllib`; otherwise it is `runs/tickets.json` on disk. The `Engine` object is built once per process and cached; on Vercel a warm function instance keeps runtime rebinding and threshold changes, a cold start reloads them from code and `connectors.toml`.
+
+A deployed engine runs as several function instances, each with the store in memory, so every `dispatch` begins with `store.refresh()`: the file backend compares the file's mtime, the Blob backend sends a conditional GET with the document's ETag and gets a `304` when nothing changed. A ticket created on one instance is therefore visible to the next request wherever it lands, at the cost of one small round trip. Writes are whole-document and last-writer-wins, which is adequate for a desk of this size and stated as a limitation below.
 
 Continuous integration, `.github/workflows/`:
 
@@ -436,6 +445,7 @@ Continuous integration, `.github/workflows/`:
 | The router sees only the message | Pass account history or prior tickets as `context`; the `Classifier.intent` signature already accepts it |
 | Single turn only | Multi-turn would need the conversation in state and a "reply and wait" edge, which is the checkpointer work above |
 | Runtime rebinding and threshold changes live in process memory | Persist them beside the tickets so a cold serverless start keeps the desk's settings |
+| The ticket document is written whole, last writer wins | Two instances saving in the same instant could drop one ticket. Per-ticket blobs, or a compare-and-swap on the ETag with one retry, would close the window |
 
 ## Repository layout
 

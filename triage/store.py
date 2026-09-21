@@ -131,6 +131,13 @@ class TicketStore:
         """Write every ticket to the backend as one document."""
         self.backend.save(list(self.tickets.values()))
 
+    def refresh(self) -> None:
+        """Pick up writes made by other processes; on Vercel every request starts here
+        so a ticket created on one function instance is visible on all of them."""
+        rows = self.backend.refresh()
+        if rows is not None:
+            self.tickets = {t["ticket_id"]: t for t in rows}
+
     # ── access ──
 
     def all(self) -> list[dict]:

@@ -5,8 +5,14 @@ it is a Vercel Blob, chosen automatically when BLOB_READ_WRITE_TOKEN is set.
 Both backends expose the same two calls, so the store does not care which.
 
 Reads: BLOB_READ_WRITE_TOKEN from the environment (in `backend_from_env`); the
-document itself on `load`. Writes: the whole document on `save`. A missing or
-unreadable document loads as an empty list, which is what triggers seeding.
+document itself on `load` and, when it has changed since, on `refresh`. Writes:
+the whole document on `save`. A missing or unreadable document loads as an
+empty list, which is what triggers seeding.
+
+`refresh` exists because a deployed engine runs as several function instances,
+each holding the store in memory: a ticket created on one instance must be
+visible to a request served by another. The check is cheap when nothing has
+changed (a file mtime; a conditional GET answered with 304).
 """
 from __future__ import annotations
 
@@ -40,6 +46,9 @@ class Backend(Protocol):
 
     def load(self) -> list[dict]: ...
     def save(self, rows: list[dict]) -> None: ...
+    def refresh(self) -> list[dict] | None:
+        """The document if another writer changed it since the last load or save, else None."""
+        ...
 
 
 class FileBackend:
@@ -48,12 +57,21 @@ class FileBackend:
 
     def __init__(self, path: Path) -> None:
         self.path = writable_dir(path.parent) / path.name
+        self._mtime = 0
+
+    def _stamp(self) -> int:
+        return self.path.stat().st_mtime_ns if self.path.exists() else 0
 
     def load(self) -> list[dict]:
+        self._mtime = self._stamp()
         return json.loads(self.path.read_text()) if self.path.exists() else []
 
     def save(self, rows: list[dict]) -> None:
         self.path.write_text(json.dumps(rows))
+        self._mtime = self._stamp()
+
+    def refresh(self) -> list[dict] | None:
+        return self.load() if self._stamp() != self._mtime else None
 
 
 class BlobBackend:
@@ -62,8 +80,9 @@ class BlobBackend:
 
     The store is private, so every read carries the bearer token and the
     blob's URL is learned from the list API (or the PUT response) rather than
-    guessed. Network and decode errors on load degrade to an empty list rather
-    than failing the request; errors on save propagate."""
+    guessed. The blob's ETag is remembered so `refresh` can ask "changed since?"
+    with a conditional GET. Network and decode errors on load degrade to an
+    empty list rather than failing the request; errors on save propagate."""
 
     API = "https://blob.vercel-storage.com"
     API_VERSION = "12"
@@ -71,7 +90,8 @@ class BlobBackend:
     def __init__(self, token: str, pathname: str = "triage/tickets.json") -> None:
         self.token = token
         self.pathname = pathname
-        self._url: str | None = None   # the blob's URL, learned on first list or write
+        self._url: str | None = None    # the blob's URL, learned on first list or write
+        self._etag: str | None = None   # of the document last loaded or saved
 
     def _headers(self, extra: dict | None = None) -> dict:
         """Auth, API-version and private-access headers, plus any per-request extras."""
@@ -91,17 +111,30 @@ class BlobBackend:
         self._url = blobs[0]["url"] if blobs else None
         return self._url
 
-    def load(self) -> list[dict]:
+    def _fetch(self, *, conditional: bool) -> list[dict] | None:
+        """GET the document. None when it does not exist, cannot be read, or
+        (with `conditional`) has not changed since the remembered ETag."""
         url = self._find_url()
         if not url:
-            return []
+            return None
+        headers = {"authorization": f"Bearer {self.token}"}
+        if conditional and self._etag:
+            headers["if-none-match"] = self._etag
         # cache=0 bypasses the CDN so a fresh function instance sees the last save
-        req = urllib.request.Request(f"{url}?cache=0", headers={"authorization": f"Bearer {self.token}"})
+        req = urllib.request.Request(f"{url}?cache=0", headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=10) as r:
+                self._etag = r.headers.get("etag")
                 return json.load(r)
-        except (urllib.error.URLError, json.JSONDecodeError):
-            return []
+        except (urllib.error.URLError, json.JSONDecodeError):   # HTTPError (incl. 304 Not Modified) is a URLError
+            return None
+
+    def load(self) -> list[dict]:
+        self._etag = None
+        return self._fetch(conditional=False) or []
+
+    def refresh(self) -> list[dict] | None:
+        return self._fetch(conditional=True)
 
     def save(self, rows: list[dict]) -> None:
         # fixed pathname, overwrite in place, no CDN caching: the document must read back exactly as written
@@ -112,7 +145,9 @@ class BlobBackend:
                                    "x-allow-overwrite": "1", "x-cache-control-max-age": "0"}),
         )
         with urllib.request.urlopen(req, timeout=15) as r:
-            self._url = json.load(r).get("url", self._url)
+            meta = json.load(r)
+        self._url = meta.get("url", self._url)
+        self._etag = meta.get("etag", None)   # the PUT reports the new document's ETag; None forces a re-read next time
 
 
 def backend_from_env(default_path: Path) -> Backend:
