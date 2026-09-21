@@ -1,0 +1,8 @@
+{"id": "T-001", "message": "I was charged twice for invoice INV-1002", "intent": "billing", "tool": "lookup_invoice", "args": {"invoice_id": "INV-1002"}, "status": "resolved", "note": "clean billing resolution"}
+{"id": "T-002", "message": "The app crashes with an error every time I export to CSV", "intent": "technical", "tool": "check_known_issue", "args": {"query": "*"}, "status": "resolved", "note": "clean technical resolution via tool calling"}
+{"id": "T-003", "message": "What are your support hours?", "intent": "general", "tool": "search_kb", "args": {"query": "*"}, "status": "resolved", "note": "clean general resolution"}
+{"id": "T-004", "message": "Invoice INV-1002 opens but the page crashes with an error every time", "intent": "technical", "tool": "check_known_issue", "args": {"query": "*"}, "status": "resolved", "note": "misroute to billing, handed to technical, resolved"}
+{"id": "T-005", "message": "asdf qwerty zxcv", "intent": null, "tool": null, "args": null, "status": "escalated", "note": "low routing confidence; any label, no specialist tool"}
+{"id": "T-006", "message": "Please refund invoice INV-0000, it was a mistake", "intent": "billing", "tool": "lookup_invoice", "args": {"invoice_id": "INV-0000"}, "status": "escalated", "note": "tool returns not found"}
+{"id": "T-007", "message": "My account ACC-9999 shows the wrong plan and I was billed for it", "intent": "billing", "tool": "get_account_status", "args": {"account_id": "ACC-9999"}, "status": "escalated", "note": "backend exception, contained"}
+{"id": "T-008", "message": "You billed me twice this month and I want a refund", "intent": "billing", "tool": null, "args": null, "status": "escalated", "note": "no identifier to act on; must not call anything"}

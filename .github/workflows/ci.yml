@@ -25,6 +25,8 @@ jobs:
       - run: pytest -q
       - name: Smoke-run the CLI on every sample path
         run: python run.py --file samples/tickets.txt
+      - name: Eval floor — the stub baseline must score 1.00 on every step of the chain
+        run: python run.py --eval --floor routing=1 --floor tool_choice=1 --floor arguments=1 --floor outcome=1 --floor confident_wrong=0
 
   console:
     name: Console · typecheck, lint, build
