@@ -1,0 +1,13 @@
+# Which connector serves which capability. Agents ask for a capability and never
+# name a connector, so swapping a line here is the whole change.
+#
+# Values are connector names registered in triage/connectors/registry.py.
+# "mock" ships with the repo. "jira" and "github" are shape-only and raise
+# ConnectorNotConfigured until their environment variables are set.
+
+[capabilities]
+"account.lookup" = "mock"
+"invoice.lookup" = "mock"
+"issues.search"  = "mock"      # "jira" or "github" once configured
+"kb.search"      = "mock"
+"handoff.create" = "mock"      # "jira" would open a real ticket on escalation

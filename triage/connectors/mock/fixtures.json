@@ -1,0 +1,33 @@
+{
+  "accounts": {
+    "ACC-1001": { "account_id": "ACC-1001", "plan": "Team", "status": "active", "balance_due": 0.0, "currency": "GBP" },
+    "ACC-1002": { "account_id": "ACC-1002", "plan": "Pro", "status": "past_due", "balance_due": 149.0, "currency": "GBP" },
+    "ACC-1003": { "account_id": "ACC-1003", "plan": "Starter", "status": "suspended", "balance_due": 29.0, "currency": "GBP" },
+    "ACC-9999": "__raise__"
+  },
+  "invoices": {
+    "INV-1002": { "invoice_id": "INV-1002", "account_id": "ACC-1002", "amount": 149.0, "currency": "GBP", "status": "paid", "charges": 2 },
+    "INV-1003": { "invoice_id": "INV-1003", "account_id": "ACC-1001", "amount": 49.0, "currency": "GBP", "status": "paid", "charges": 1 },
+    "INV-1004": { "invoice_id": "INV-1004", "account_id": "ACC-1003", "amount": 29.0, "currency": "GBP", "status": "open", "charges": 1 }
+  },
+  "known_issues": [
+    { "issue_id": "KI-201", "title": "Invoice page crashes on open", "status": "fixed",
+      "workaround": "Clear the browser cache or use the mobile app until 4.2.1 rolls out.",
+      "affected_versions": ["4.2.0"], "keywords": ["invoice", "crash", "crashes", "error", "page"] },
+    { "issue_id": "KI-202", "title": "Login loop after password reset", "status": "investigating",
+      "workaround": "Sign out on all devices, then sign in once from the web.",
+      "affected_versions": ["4.1.*", "4.2.0"], "keywords": ["login", "loop", "password", "reset", "sign"] },
+    { "issue_id": "KI-203", "title": "Export to CSV times out over 10k rows", "status": "open",
+      "workaround": null, "affected_versions": ["*"], "keywords": ["export", "csv", "timeout", "times", "crash", "crashes", "error"] }
+  ],
+  "kb": [
+    { "article_id": "KB-1", "title": "Changing your plan", "answer": "Go to Settings, Billing, Change plan. Changes apply from the next cycle.",
+      "keywords": ["change", "plan", "upgrade", "downgrade"] },
+    { "article_id": "KB-2", "title": "Support hours", "answer": "Support is available 08:00 to 20:00 UK time, Monday to Friday.",
+      "keywords": ["hours", "support", "open", "when", "contact"] },
+    { "article_id": "KB-3", "title": "Exporting your data", "answer": "Settings, Data, Export. Large exports arrive by email.",
+      "keywords": ["export", "data", "download"] },
+    { "article_id": "KB-4", "title": "Feature requests", "answer": "Feature requests are logged from Settings, Feedback, and reviewed monthly.",
+      "keywords": ["feature", "request", "add", "wish", "would", "like"] }
+  ]
+}
