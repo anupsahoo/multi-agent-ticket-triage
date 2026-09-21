@@ -6,7 +6,7 @@ A support message arrives. A router classifies it, one of three specialist agent
 | --- | --- |
 | Engine | Python 3.11+, LangGraph 1.x, LangChain Core, Pydantic 2 |
 | Console | Next.js 16, React 19, TypeScript, Tailwind 4 |
-| Tests | 17, offline, under one second |
+| Tests | 19, offline, under one second |
 | Screens | 7 in the sidebar, plus a ticket detail page |
 | API | 10 endpoints, standard library only |
 | Deploy target | One Vercel project: Next.js at the root, Python function at `api/index.py` |
