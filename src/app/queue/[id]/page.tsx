@@ -7,7 +7,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Quote } from "lucide-react";
-import { engineJson, engineUrl } from "@/lib/engine";
+import { engineFetch, engineJson } from "@/lib/engine";
 import { TopBar } from "@/components/shell/TopBar";
 import { Panel } from "@/components/ui/Panel";
 import { TicketHeader } from "@/components/ticket/TicketHeader";
@@ -25,7 +25,7 @@ const DEFAULTS: Settings = { intent_confidence_min: 0.6, domain_min: 0.5, resolu
 
 /** Null on 404 so the page can call `notFound()`; any other failure is a real error. */
 async function loadTicket(id: string): Promise<Ticket | null> {
-  const r = await fetch(`${engineUrl()}/api/tickets/${encodeURIComponent(id)}`, { cache: "no-store" });
+  const r = await engineFetch(`/api/tickets/${encodeURIComponent(id)}`);
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`API ${r.status}`);
   return (await r.json()) as Ticket;
