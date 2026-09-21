@@ -1,0 +1,17 @@
+# One line per ticket. Lines starting with # are ignored.
+# 1 billing, clean resolution
+I was charged twice for invoice INV-1002
+# 2 technical, clean resolution via LLM tool calling
+The app crashes with an error every time I export to CSV
+# 3 general, clean resolution
+What are your support hours?
+# 4 misroute: first keyword says billing, the facts say technical → handed over, resolved
+Invoice INV-1002 opens but the page crashes with an error every time
+# 5 escalation: low routing confidence
+asdf qwerty zxcv
+# 6 escalation: tool returns not found
+Please refund invoice INV-0000, it was a mistake
+# 7 escalation: backend exception, contained
+My account ACC-9999 shows the wrong plan and I was billed for it
+# 8 escalation: billing ticket with no identifier to act on
+You billed me twice this month and I want a refund
