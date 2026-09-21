@@ -1,0 +1,28 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# node / next
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets and local state
+.env
+.env*.local
+.vercel/
+runs/*.jsonl
+!runs/example.jsonl
+runs/tickets.json
+handoff/*.json
+!handoff/.gitkeep
+.DS_Store
+
+# editor and tool-generated files
+CLAUDE.md
+AGENTS.md

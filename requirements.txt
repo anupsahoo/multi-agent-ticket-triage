@@ -1,0 +1,5 @@
+# Runtime dependencies for the engine, used by Vercel's Python runtime.
+# Keep in sync with pyproject.toml.
+langgraph>=1.0
+langchain-core>=1.0
+pydantic>=2.0
