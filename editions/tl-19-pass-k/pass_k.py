@@ -97,7 +97,7 @@ def main() -> int:
         clean = sum(r["passes"] == N_RUNS for r in g)
         summary[n] = {k: mean(k, g) for k in ("pass@1", "pass@5", "pass^3", "pass^5")}
         s = summary[n]
-        print(f"{str(n):<16}{s['pass@1']:>8.0%}{s['pass@5']:>8.0%}{s['pass^3']:>8.0%}{s['pass^5']:>8.0%}"
+        print(f"{str(n):<16}{s['pass@1']:>8.0%}{s['pass@5']:>8.1%}{s['pass^3']:>8.0%}{s['pass^5']:>8.0%}"
               f"{f'{clean}/{len(g)}':>21}")
 
     with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
@@ -123,7 +123,7 @@ def show(mode: str) -> int:
         for tid in ("L1-01", "L3-01", "L5-02"):
             c = results[tid]
             print(f"{tid}: passed {c} of {N_RUNS} runs   pass@1 {pass_at_k(N_RUNS, c, 1):.0%}   "
-                  f"pass@5 {pass_at_k(N_RUNS, c, 5):.0%}   pass^5 {pass_hat_k(N_RUNS, c, 5):.0%}")
+                  f"pass@5 {pass_at_k(N_RUNS, c, 5):.2%}   pass^5 {pass_hat_k(N_RUNS, c, 5):.0%}")
         return 0
     groups = {n: [t for t in tasks if t["length"] == n] for n in CHAIN_LENGTHS}
     if mode == "chain":
