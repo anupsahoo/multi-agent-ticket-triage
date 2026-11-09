@@ -124,8 +124,12 @@ def check(c, db: Store) -> str | None:
             return f"missing {table} row {spec}"
         return None
     _, table, tid, n = c
-    found = len(getattr(db, table))          # every row written during this ticket, whatever id it carries
-    return None if found == n else f"{table} has {found} rows for {tid}, expected {n}"
+    rows = getattr(db, table)
+    found = sum(r["ticket"] == tid for r in rows)
+    if found != n:
+        return f"{table} has {found} rows for {tid}, expected {n}"
+    stray = len(rows) - found                # rows written during this ticket under another id
+    return f"{table} has {stray} rows under another ticket id" if stray else None
 
 
 def effect_score(t, db: Store) -> tuple[bool, str, int]:
@@ -147,11 +151,12 @@ def score(agent) -> list[dict]:
 
 
 def main() -> int:
-    n, out, totals = len(TICKETS), [], {}
+    n, out, totals, paid = len(TICKETS), [], {}, {}
     total = sum(len(checkpoints(t)) for t in TICKETS)
     print(f"{'agent':<8}{'reply rubric':>14}{'effect score':>14}{'checkpoints met':>17}{'said it, effect wrong':>24}")
     for name, agent in AGENTS.items():
         rows = score(agent)
+        paid[name] = sum(f["amount"] for r in rows for f in r["refunds"] if f["status"] == "issued")
         txt, eff = sum(r["text_pass"] for r in rows), sum(r["effect_pass"] for r in rows)
         gap = sum(r["text_pass"] and not r["effect_pass"] for r in rows)
         totals[name] = (txt, eff, gap)
@@ -160,7 +165,8 @@ def main() -> int:
         out += [{"agent": name, **{k: v for k, v in r.items() if k not in ("reply", "refunds")}} for r in rows]
     owed = sum(INVOICES[t[3]] for t in TICKETS if t[2] == "refund")
     print(f"\nrefunds the customers were told were issued: {owed} owed in total")
-    print(f"buggy agent paid 0 of it; double agent paid {2 * owed:,}")
+    print(f"issued in the database: real {paid['real']:,}, replay {paid['replay']:,}, "
+          f"buggy {paid['buggy']:,}, double {paid['double']:,}")
 
     with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(out[0]))

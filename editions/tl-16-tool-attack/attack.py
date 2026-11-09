@@ -55,7 +55,7 @@ class Ticket:
 def parse_ticket(tid: str, message: str, intent: str, customer: str, topic: str = "") -> Ticket:
     """Read only the customer's message. Tool output never reaches this function."""
     inv = re.search(r"INV-\d{4}", message)
-    amt = re.search(r"\brefund (\d+(?:\.\d+)?)\b|\b(\d+(?:\.\d+)?) back\b", message, re.I)
+    amt = re.search(r"\brefund (?:of )?[£$€]?(\d+(?:\.\d+)?)\b|[£$€]?\b(\d+(?:\.\d+)?) back\b", message, re.I)
     to = re.search(r"[\w.+-]+@[\w.-]+\w", message)
     t = Ticket(tid, message, intent, customer, topic, inv.group(0) if inv else None,
                float(amt.group(1) or amt.group(2)) if amt else None,
