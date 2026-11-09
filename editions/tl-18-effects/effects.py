@@ -137,7 +137,7 @@ def main() -> int:
         if r["agent"] == "buggy" and not r["effect_pass"]:
             print(f"  {r['ticket']} {r['effect_detail']}")
 
-    with open(HERE / "results.csv", "w", newline="") as f:
+    with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

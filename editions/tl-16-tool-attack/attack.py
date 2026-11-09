@@ -177,7 +177,7 @@ def main() -> int:
     for t, why in false_blocks:
         print(f"  {t.id} '{t.message}' | {why}")
 
-    with open(HERE / "results.csv", "w", newline="") as f:
+    with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

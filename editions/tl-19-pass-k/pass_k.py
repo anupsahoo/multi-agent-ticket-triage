@@ -73,16 +73,16 @@ def main() -> int:
         print(f"{str(n):<16}{s['pass@1']:>8.0%}{s['pass@5']:>8.0%}{s['pass^3']:>8.0%}{s['pass^5']:>8.0%}"
               f"{f'{clean}/{len(g)}':>21}")
 
-    with open(HERE / "results.csv", "w", newline="") as f:
+    with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
 
     published = HERE / "published.json"       # the numbers printed in the article
     if "--publish" in sys.argv:
-        published.write_text(json.dumps({str(k): v for k, v in summary.items()}, indent=1))
+        published.write_text(json.dumps({str(k): v for k, v in summary.items()}, indent=1), encoding="utf-8")
     if "--check" in sys.argv:    # CI floor: the article's numbers must still come out of the code
-        want = json.loads(published.read_text())
+        want = json.loads(published.read_text(encoding="utf-8"))
         return 0 if all(abs(want[str(n)][k] - v) < 1e-9 for n, s in summary.items() for k, v in s.items()) else 1
     return 0
 

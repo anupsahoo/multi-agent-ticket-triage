@@ -27,8 +27,6 @@ jobs:
         run: python run.py --file samples/tickets.txt
       - name: Eval floor — the stub baseline must score 1.00 on every step of the chain
         run: python run.py --eval --floor routing=1 --floor tool_choice=1 --floor arguments=1 --floor outcome=1 --floor confident_wrong=0
-      - name: "Trust Layer editions: every claim in every edition still comes out of its code"
-        run: for s in editions/tl-*/*.py; do echo "== $s"; python "$s" --check || exit 1; done
 
   console:
     name: Console · typecheck, lint, build
@@ -44,3 +42,28 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm build
+
+  editions:
+    # Readers run these on their own laptops. Prove every edition works there:
+    # Windows, Mac and Linux, three Python versions, a fresh checkout, standard library only.
+    name: Trust Layer editions · ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run every edition exactly as the README says, then check its published numbers
+        shell: bash
+        run: |
+          for d in editions/tl-*/; do
+            s=$(ls "$d"*.py | head -1)
+            echo "== $s"
+            (cd "$d" && python "$(basename "$s")" && python "$(basename "$s")" --check) || exit 1
+          done
+

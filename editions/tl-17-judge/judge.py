@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
-LABELS = [json.loads(line) for line in open(HERE / "human_labels.jsonl")]
+LABELS = [json.loads(line) for line in open(HERE / "human_labels.jsonl", encoding="utf-8")]
 
 # 1. Judge v1: the prompt most teams start with ------------------------------
 # "Is this a good support reply? Answer good or bad." With no reference answer,
@@ -73,7 +73,7 @@ def main() -> int:
         print(f"  agreement {p_o:.0%}   luck alone {p_e:.0%}   kappa {k:.2f}")
 
     print("\nwhere the judges went wrong")
-    with open(HERE / "results.csv", "w", newline="") as f:
+    with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id", "topic", "human", "v1", "v2", "reply"])
         for row in LABELS:
