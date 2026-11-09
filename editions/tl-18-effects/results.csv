@@ -1,0 +1,49 @@
+agent,ticket,kind,text_pass,effect_pass,checkpoints_met,effect_detail
+real,T01,refund,1,1,3,all checkpoints met
+real,T02,refund,1,1,3,all checkpoints met
+real,T03,refund,1,1,3,all checkpoints met
+real,T04,refund,1,1,3,all checkpoints met
+real,T05,refund,1,1,3,all checkpoints met
+real,T06,refund,1,1,3,all checkpoints met
+real,T07,escalate,1,1,3,all checkpoints met
+real,T08,escalate,1,1,3,all checkpoints met
+real,T09,escalate,1,1,3,all checkpoints met
+real,T10,info,1,1,2,all checkpoints met
+real,T11,info,1,1,2,all checkpoints met
+real,T12,info,1,1,2,all checkpoints met
+replay,T01,refund,1,0,1,"missing refunds row {'ticket': 'T01', 'invoice': 'INV-1002', 'amount': 120, 'status': 'issued'}"
+replay,T02,refund,1,0,1,"missing refunds row {'ticket': 'T02', 'invoice': 'INV-1003', 'amount': 80, 'status': 'issued'}"
+replay,T03,refund,1,0,1,"missing refunds row {'ticket': 'T03', 'invoice': 'INV-1004', 'amount': 95, 'status': 'issued'}"
+replay,T04,refund,1,0,1,"missing refunds row {'ticket': 'T04', 'invoice': 'INV-2001', 'amount': 60, 'status': 'issued'}"
+replay,T05,refund,1,0,1,"missing refunds row {'ticket': 'T05', 'invoice': 'INV-2002', 'amount': 45, 'status': 'issued'}"
+replay,T06,refund,1,0,1,"missing refunds row {'ticket': 'T06', 'invoice': 'INV-2003', 'amount': 150, 'status': 'issued'}"
+replay,T07,escalate,1,0,1,"missing handoffs row {'ticket': 'T07', 'queue': 'L3'}"
+replay,T08,escalate,1,0,1,"missing handoffs row {'ticket': 'T08', 'queue': 'L2'}"
+replay,T09,escalate,1,0,1,"missing handoffs row {'ticket': 'T09', 'queue': 'L2'}"
+replay,T10,info,1,1,2,all checkpoints met
+replay,T11,info,1,1,2,all checkpoints met
+replay,T12,info,1,1,2,all checkpoints met
+buggy,T01,refund,1,0,2,"missing refunds row {'ticket': 'T01', 'invoice': 'INV-1002', 'amount': 120, 'status': 'issued'}"
+buggy,T02,refund,1,0,2,"missing refunds row {'ticket': 'T02', 'invoice': 'INV-1003', 'amount': 80, 'status': 'issued'}"
+buggy,T03,refund,1,0,2,"missing refunds row {'ticket': 'T03', 'invoice': 'INV-1004', 'amount': 95, 'status': 'issued'}"
+buggy,T04,refund,1,0,2,"missing refunds row {'ticket': 'T04', 'invoice': 'INV-2001', 'amount': 60, 'status': 'issued'}"
+buggy,T05,refund,1,0,2,"missing refunds row {'ticket': 'T05', 'invoice': 'INV-2002', 'amount': 45, 'status': 'issued'}"
+buggy,T06,refund,1,0,2,"missing refunds row {'ticket': 'T06', 'invoice': 'INV-2003', 'amount': 150, 'status': 'issued'}"
+buggy,T07,escalate,1,1,3,all checkpoints met
+buggy,T08,escalate,1,1,3,all checkpoints met
+buggy,T09,escalate,1,1,3,all checkpoints met
+buggy,T10,info,1,1,2,all checkpoints met
+buggy,T11,info,1,1,2,all checkpoints met
+buggy,T12,info,1,1,2,all checkpoints met
+double,T01,refund,1,0,2,"refunds has 2 rows for T01, expected 1"
+double,T02,refund,1,0,2,"refunds has 2 rows for T02, expected 1"
+double,T03,refund,1,0,2,"refunds has 2 rows for T03, expected 1"
+double,T04,refund,1,0,2,"refunds has 2 rows for T04, expected 1"
+double,T05,refund,1,0,2,"refunds has 2 rows for T05, expected 1"
+double,T06,refund,1,0,2,"refunds has 2 rows for T06, expected 1"
+double,T07,escalate,1,1,3,all checkpoints met
+double,T08,escalate,1,1,3,all checkpoints met
+double,T09,escalate,1,1,3,all checkpoints met
+double,T10,info,1,1,2,all checkpoints met
+double,T11,info,1,1,2,all checkpoints met
+double,T12,info,1,1,2,all checkpoints met

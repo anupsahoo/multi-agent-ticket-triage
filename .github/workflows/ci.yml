@@ -42,3 +42,28 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm build
+
+  editions:
+    # Readers run these on their own laptops. Prove every edition works there:
+    # Windows, Mac and Linux, three Python versions, a fresh checkout, standard library only.
+    name: Trust Layer editions · ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run every edition exactly as the README says, then check its published numbers
+        shell: bash
+        run: |
+          for d in editions/tl-*/; do
+            s=$(ls "$d"*.py | head -1)
+            echo "== $s"
+            (cd "$d" && python "$(basename "$s")" && python "$(basename "$s")" --check) || exit 1
+          done
+
