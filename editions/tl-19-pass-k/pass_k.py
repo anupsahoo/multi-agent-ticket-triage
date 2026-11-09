@@ -54,11 +54,23 @@ def release_verdict(pass_hat_3: float) -> str:
     return "SHIP" if pass_hat_3 >= RELEASE_BAR else "DO NOT SHIP"
 
 
-def interval(per_task: list[float], n_boot: int = 2000, seed: int = 191) -> tuple[float, float]:
-    """Bootstrap 95% interval for the mean over tasks: is the gap to the bar just noise?"""
+def interval(passes: list[int], k: int = 3, n_boot: int = 1000, seed: int = 191) -> tuple[float, float]:
+    """Bootstrap 95% interval for mean pass^k. Resample the tasks, and inside each task
+    resample its 20 runs, so both task choice and run to run noise are covered.
+    1,000 resamples, basic (reflected) bootstrap interval."""
     rng = random.Random(seed)
-    means = sorted(sum(rng.choice(per_task) for _ in per_task) / len(per_task) for _ in range(n_boot))
-    return means[int(0.025 * n_boot)], means[int(0.975 * n_boot) - 1]
+    means = []
+    for _ in range(n_boot):
+        total = 0.0
+        for _ in passes:
+            c = rng.choice(passes)
+            c_star = sum(rng.random() < c / N_RUNS for _ in range(N_RUNS))
+            total += pass_hat_k(N_RUNS, c_star, k)
+        means.append(total / len(passes))
+    means.sort()
+    point = sum(pass_hat_k(N_RUNS, c, k) for c in passes) / len(passes)
+    # basic bootstrap: reflect around the estimate, which removes the upward pull of resampling runs
+    return 2 * point - means[int(0.975 * n_boot) - 1], 2 * point - means[int(0.025 * n_boot)]
 
 
 def main() -> int:
@@ -123,8 +135,8 @@ def show(mode: str) -> int:
     c_all = [results[t["id"]] for t in tasks]
     p3 = sum(pass_hat_k(N_RUNS, c, 3) for c in c_all) / len(c_all)
     print(f"pass@1 {sum(c / N_RUNS for c in c_all) / len(c_all):.0%}   "
-          f"pass@5 {sum(pass_at_k(N_RUNS, c, 5) for c in c_all) / len(c_all):.0%}   pass^3 {p3:.0%}")
-    lo, hi = interval([pass_hat_k(N_RUNS, c, 3) for c in c_all])
+          f"pass@5 {sum(pass_at_k(N_RUNS, c, 5) for c in c_all) / len(c_all):.1%}   pass^3 {p3:.0%}")
+    lo, hi = interval(c_all)
     print(f"pass^3 95% interval {lo:.0%} to {hi:.0%}")
     print(f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(hi)} even at the top of the interval" if hi < RELEASE_BAR
           else f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(p3)}")

@@ -19,15 +19,16 @@ Each move in the article also runs on its own: `python3 pass_k.py --show runs`, 
 
 ## What you get
 
-| Tools in chain | pass@1 | pass@5 | pass^3 | pass^5 | Tasks never failed |
-| --- | --- | --- | --- | --- | --- |
-| 1 | 92% | 100% | 78% | 66% | 13/50 |
-| 2 | 85% | 100% | 64% | 49% | 8/50 |
-| 3 | 75% | 100% | 44% | 26% | 1/50 |
-| 5 | 67% | 100% | 30% | 14% | 0/50 |
-| all | 80% | 100% | 54% | 39% | 22/200 |
+```
+tools in chain    pass@1  pass@5  pass^3  pass^5   tasks never failed
+1                    92%    100%     78%     66%                13/50
+2                    85%    100%     64%     49%                 8/50
+3                    75%    100%     44%     26%                 1/50
+5                    67%    100%     30%     14%                 0/50
+all                  80%    100%     54%     39%               22/200
+```
 
-pass@k and pass^k use the unbiased estimators: `1 - C(n-c, k) / C(n, k)` and `C(c, k) / C(n, k)`, for c passes out of n runs.
+pass@k and pass^k use the unbiased estimators: `1 - C(n-c, k) / C(n, k)` and `C(c, k) / C(n, k)`, for c passes out of n runs. Every run is drawn independently, so failures inside a task are not correlated. Real agents often fail the same task the same way every time, which pulls pass^k towards pass@1. Measure your own agent rather than assuming either case.
 
 ## CI floor
-`python pass_k.py --check` fails if the numbers above stop coming out of the code (`published.json`).
+`python3 pass_k.py --check` fails if the numbers above stop coming out of the code (`published.json`).
