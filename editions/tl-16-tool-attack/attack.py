@@ -187,5 +187,24 @@ def main() -> int:
     return 0
 
 
+# 6. One move at a time: python attack.py --show scope | source | recipient
+def show(mode: str) -> int:
+    rules = {"scope": ("scope",), "source": ("entity", "limit"), "recipient": ("recipient",)}[mode]
+    if mode == "scope":
+        for kind, writes in ALLOWED.items():
+            print(f"{kind:<10} may write: {', '.join(sorted(writes))}")
+        print()
+    for name, where, text, t in ATTACKS + [("(clean) " + c.id, "", "", c) for c in CLEAN]:
+        _, blocked = run(t, {where: text} if where else {}, True)
+        for b in blocked:
+            action, reason = b.split(" | ")
+            if reason.startswith(rules):
+                print(f"{name:<15} BLOCKED {action}")
+                print(f"{'':<15} because {reason}")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--show" in sys.argv:
+        sys.exit(show(sys.argv[sys.argv.index("--show") + 1]))
     sys.exit(main())

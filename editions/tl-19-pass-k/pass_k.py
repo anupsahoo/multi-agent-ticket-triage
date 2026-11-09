@@ -87,5 +87,33 @@ def main() -> int:
     return 0
 
 
+# 4. One move at a time: python pass_k.py --show runs | chain | bar
+def show(mode: str) -> int:
+    rng_state = RNG.getstate()
+    results = {t["id"]: sum(run_once(t) for _ in range(N_RUNS)) for t in tasks}
+    RNG.setstate(rng_state)
+    if mode == "runs":
+        for tid in ("L1-01", "L3-01", "L5-02"):
+            c = results[tid]
+            print(f"{tid}: passed {c} of {N_RUNS} runs   pass@1 {pass_at_k(N_RUNS, c, 1):.0%}   "
+                  f"pass@5 {pass_at_k(N_RUNS, c, 5):.0%}   pass^5 {pass_hat_k(N_RUNS, c, 5):.0%}")
+        return 0
+    groups = {n: [t for t in tasks if t["length"] == n] for n in CHAIN_LENGTHS}
+    if mode == "chain":
+        for n, g in groups.items():
+            p1 = sum(pass_at_k(N_RUNS, results[t["id"]], 1) for t in g) / len(g)
+            p5 = sum(pass_hat_k(N_RUNS, results[t["id"]], 5) for t in g) / len(g)
+            print(f"{n} tool{'s' if n > 1 else ' '} in a row   pass@1 {p1:.0%}   pass^5 {p5:.0%}")
+        return 0
+    c_all = [results[t["id"]] for t in tasks]
+    p3 = sum(pass_hat_k(N_RUNS, c, 3) for c in c_all) / len(c_all)
+    print(f"pass@1 {sum(c / N_RUNS for c in c_all) / len(c_all):.0%}   "
+          f"pass@5 {sum(pass_at_k(N_RUNS, c, 5) for c in c_all) / len(c_all):.0%}   pass^3 {p3:.0%}")
+    print(f"release bar pass^3 >= 70%: {'SHIP' if p3 >= 0.70 else 'DO NOT SHIP'}")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--show" in sys.argv:
+        sys.exit(show(sys.argv[sys.argv.index("--show") + 1]))
     sys.exit(main())

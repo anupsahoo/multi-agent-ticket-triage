@@ -147,5 +147,28 @@ def main() -> int:
     return 0
 
 
+# 6. One move at a time: python effects.py --show checkpoints | replay | buggy
+def show(mode: str) -> int:
+    if mode == "checkpoints":
+        for t in (TICKETS[0], TICKETS[6], TICKETS[9]):
+            print(f"{t[0]} {t[1]}")
+            for c in checkpoints(t):
+                print(f"   {c[0]:<6} {c[1]:<9} {c[2]}")
+        return 0
+    agent = replay_agent if mode == "replay" else buggy_agent
+    for t in TICKETS if mode == "replay" else TICKETS[:2]:
+        db = Store()
+        reply = agent(t, db)
+        ok, why = effect_score(t, db)
+        print(f"{t[0]} {t[2]:<9} text {'pass' if text_score(t, reply) else 'FAIL'}   "
+              f"effect {'pass' if ok else 'FAIL'}   {why if not ok else ''}")
+        if mode == "buggy":
+            print(f"   reply:  {reply}")
+            print(f"   refunds table: {db.refunds}")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--show" in sys.argv:
+        sys.exit(show(sys.argv[sys.argv.index("--show") + 1]))
     sys.exit(main())

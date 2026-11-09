@@ -88,5 +88,30 @@ def main() -> int:
     return 0
 
 
+# 4. One move at a time: python judge.py --show labels | luck | rubric
+def show(mode: str) -> int:
+    if mode == "labels":
+        good = sum(r["human"] == "good" for r in LABELS)
+        print(f"{len(LABELS)} replies graded by hand: {good} good, {len(LABELS) - good} bad\n")
+        for row in (LABELS[0], LABELS[34], LABELS[36]):
+            print(f"{row['id']} {row['human']:<4} {row['reply'][:70]}")
+        return 0
+    judge = judge_v1 if mode == "luck" else judge_v2
+    m = confusion(judge)
+    p_o, p_e, k = kappa(m)
+    tpr = m[("good", "good")] / (m[("good", "good")] + m[("good", "bad")])
+    tnr = m[("bad", "bad")] / (m[("bad", "good")] + m[("bad", "bad")])
+    print(f"{'v1 tone only' if mode == 'luck' else 'v2 rubric'}")
+    print(f"  agreement {p_o:.1%}   luck alone {p_e:.1%}   kappa {k:.2f}")
+    print(f"  good replies it passed {tpr:.0%}   bad replies it caught {tnr:.0%}")
+    if mode == "rubric":
+        for row in LABELS:
+            if judge_v2(row) != row["human"]:
+                print(f"  missed {row['id']}: {row['reply']}")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--show" in sys.argv:
+        sys.exit(show(sys.argv[sys.argv.index("--show") + 1]))
     sys.exit(main())
