@@ -8,8 +8,10 @@ Standard library only. No install, no API key, same numbers on every machine.
 ```bash
 git clone https://github.com/anupsahoo/multi-agent-ticket-triage
 cd multi-agent-ticket-triage/editions/tl-16-tool-attack
-python attack.py
+python3 attack.py   # on Windows: python attack.py
 ```
+
+Each move in the article also runs on its own: `python3 attack.py --show scope`, `--show source` or `--show recipient`.
 
 ## What you get
 

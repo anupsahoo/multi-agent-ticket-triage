@@ -8,8 +8,10 @@ Standard library only. No install, no API key.
 ```bash
 git clone https://github.com/anupsahoo/multi-agent-ticket-triage
 cd multi-agent-ticket-triage/editions/tl-17-judge
-python judge.py
+python3 judge.py   # on Windows: python judge.py
 ```
+
+Each move in the article also runs on its own: `python3 judge.py --show labels`, `--show luck` or `--show rubric`.
 
 ## What you get
 

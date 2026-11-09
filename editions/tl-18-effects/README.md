@@ -8,8 +8,10 @@ Standard library only. No install, no API key.
 ```bash
 git clone https://github.com/anupsahoo/multi-agent-ticket-triage
 cd multi-agent-ticket-triage/editions/tl-18-effects
-python effects.py
+python3 effects.py   # on Windows: python effects.py
 ```
+
+Each move in the article also runs on its own: `python3 effects.py --show checkpoints`, `--show replay` or `--show buggy`.
 
 ## What you get
 

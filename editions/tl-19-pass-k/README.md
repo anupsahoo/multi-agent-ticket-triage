@@ -12,8 +12,10 @@ Standard library only, seeded, same numbers everywhere.
 ```bash
 git clone https://github.com/anupsahoo/multi-agent-ticket-triage
 cd multi-agent-ticket-triage/editions/tl-19-pass-k
-python pass_k.py
+python3 pass_k.py   # on Windows: python pass_k.py
 ```
+
+Each move in the article also runs on its own: `python3 pass_k.py --show runs`, `--show chain` or `--show bar`.
 
 ## What you get
 
