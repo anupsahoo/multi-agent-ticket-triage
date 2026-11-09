@@ -46,6 +46,14 @@ def pass_hat_k(n: int, c: int, k: int) -> float:     # all k work
     return comb(c, k) / comb(n, k)
 
 
+# 4. The release bar, written down
+RELEASE_BAR = 0.70                # pass^3 a release must reach
+
+
+def release_verdict(pass_hat_3: float) -> str:
+    return "SHIP" if pass_hat_3 >= RELEASE_BAR else "DO NOT SHIP"
+
+
 def main() -> int:
     rows = []
     for t in tasks:
@@ -87,7 +95,7 @@ def main() -> int:
     return 0
 
 
-# 4. One move at a time: python pass_k.py --show runs | chain | bar
+# 5. One move at a time: python pass_k.py --show runs | chain | bar
 def show(mode: str) -> int:
     rng_state = RNG.getstate()
     results = {t["id"]: sum(run_once(t) for _ in range(N_RUNS)) for t in tasks}
@@ -109,7 +117,7 @@ def show(mode: str) -> int:
     p3 = sum(pass_hat_k(N_RUNS, c, 3) for c in c_all) / len(c_all)
     print(f"pass@1 {sum(c / N_RUNS for c in c_all) / len(c_all):.0%}   "
           f"pass@5 {sum(pass_at_k(N_RUNS, c, 5) for c in c_all) / len(c_all):.0%}   pass^3 {p3:.0%}")
-    print(f"release bar pass^3 >= 70%: {'SHIP' if p3 >= 0.70 else 'DO NOT SHIP'}")
+    print(f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(p3)}")
     return 0
 
 

@@ -82,18 +82,37 @@ def plan(ticket: "Ticket", context: dict[str, str]) -> list[Action]:
 ALLOWED = {"billing": {"refund", "email"}, "technical": {"email"}, "general": {"email"}}
 
 
-def guard(ticket: "Ticket", a: Action) -> str | None:
-    """Return a block reason, or None to allow."""
+def check_scope(ticket: "Ticket", a: Action) -> str | None:
+    """Move one: is this kind of write allowed for this kind of ticket?"""
     if a.kind not in ALLOWED[ticket.intent]:
         return f"scope: {a.kind} not allowed for a {ticket.intent} ticket"
+    return None
+
+
+def check_source(ticket: "Ticket", a: Action) -> str | None:
+    """Move two: does the write match what the customer actually asked for?"""
     if a.kind == "refund":
         inv = a.args["invoice"]
-        if inv != ticket.invoice:                         # must be named by the user
+        if inv != ticket.invoice:                          # must be named by the customer
             return f"entity: {inv} is not in the customer's message"
-        if a.args["amount"] > INVOICES[inv]["amount"]:     # never more than was paid
+        if a.args["amount"] > INVOICES[inv]["amount"]:      # never more than was paid
             return f"limit: {a.args['amount']:.0f} exceeds invoice {INVOICES[inv]['amount']:.0f}"
+    return None
+
+
+def check_recipient(ticket: "Ticket", a: Action) -> str | None:
+    """Move three: data only leaves to the customer on file."""
     if a.kind == "email" and a.args["to"] != CUSTOMERS[ticket.customer]:
         return f"recipient: {a.args['to']} is not the customer on file"
+    return None
+
+
+def guard(ticket: "Ticket", a: Action) -> str | None:
+    """Every write passes all three checks. Return a block reason, or None to allow."""
+    for check in (check_scope, check_source, check_recipient):
+        reason = check(ticket, a)
+        if reason:
+            return reason
     return None
 
 
