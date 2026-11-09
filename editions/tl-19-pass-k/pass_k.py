@@ -1,0 +1,91 @@
+"""The Trust Layer, edition 19: Passed Once. Failed Forever.
+
+200 agent tasks that need 1, 2, 3 or 5 tool calls in a row. Every tool call
+succeeds most of the time, like a real one. Each task is run 20 times, and the
+same results are counted three ways:
+
+  pass@1  the chance a single run works
+  pass@k  the chance at least one of k runs works
+  pass^k  the chance all k runs work (what a customer who comes back feels)
+
+Standard library only. Seeded, so every machine gets the same numbers.
+Run:  python pass_k.py
+"""
+from __future__ import annotations
+
+import csv
+import json
+import random
+import sys
+from math import comb
+from pathlib import Path
+
+HERE = Path(__file__).parent
+RNG = random.Random(19)
+N_RUNS = 20                       # runs per task
+CHAIN_LENGTHS = (1, 2, 3, 5)      # tool calls a task needs, in a row
+TASKS_PER_LENGTH = 50
+
+# 1. The tasks: each tool call has its own success rate, between 85% and 99% ----
+tasks = [{"id": f"L{n}-{i:02}", "length": n,
+          "step_p": [round(RNG.uniform(0.85, 0.99), 3) for _ in range(n)]}
+         for n in CHAIN_LENGTHS for i in range(1, TASKS_PER_LENGTH + 1)]
+
+
+# 2. One run: the task passes only if every tool call in the chain passes -------
+def run_once(task: dict) -> bool:
+    return all(RNG.random() < p for p in task["step_p"])
+
+
+# 3. The three ways to count c passes out of n runs (unbiased estimators) -------
+def pass_at_k(n: int, c: int, k: int) -> float:      # at least one of k works
+    return 1.0 if n - c < k else 1 - comb(n - c, k) / comb(n, k)
+
+
+def pass_hat_k(n: int, c: int, k: int) -> float:     # all k work
+    return comb(c, k) / comb(n, k)
+
+
+def main() -> int:
+    rows = []
+    for t in tasks:
+        c = sum(run_once(t) for _ in range(N_RUNS))
+        true_p = 1.0
+        for p in t["step_p"]:
+            true_p *= p
+        rows.append({"task": t["id"], "length": t["length"], "passes": c,
+                     "true_p": round(true_p, 3),
+                     "pass@1": round(pass_at_k(N_RUNS, c, 1), 3),
+                     "pass@5": round(pass_at_k(N_RUNS, c, 5), 3),
+                     "pass^3": round(pass_hat_k(N_RUNS, c, 3), 3),
+                     "pass^5": round(pass_hat_k(N_RUNS, c, 5), 3)})
+
+    def mean(key, group):
+        return sum(r[key] for r in group) / len(group)
+
+    print(f"{'tools in chain':<16}{'pass@1':>8}{'pass@5':>8}{'pass^3':>8}{'pass^5':>8}{'tasks never failed':>21}")
+    summary = {}
+    for n in CHAIN_LENGTHS + ("all",):
+        g = rows if n == "all" else [r for r in rows if r["length"] == n]
+        clean = sum(r["passes"] == N_RUNS for r in g)
+        summary[n] = {k: mean(k, g) for k in ("pass@1", "pass@5", "pass^3", "pass^5")}
+        s = summary[n]
+        print(f"{str(n):<16}{s['pass@1']:>8.0%}{s['pass@5']:>8.0%}{s['pass^3']:>8.0%}{s['pass^5']:>8.0%}"
+              f"{f'{clean}/{len(g)}':>21}")
+
+    with open(HERE / "results.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
+        w.writeheader()
+        w.writerows(rows)
+
+    published = HERE / "published.json"       # the numbers printed in the article
+    if "--publish" in sys.argv:
+        published.write_text(json.dumps({str(k): v for k, v in summary.items()}, indent=1))
+    if "--check" in sys.argv:    # CI floor: the article's numbers must still come out of the code
+        want = json.loads(published.read_text())
+        return 0 if all(abs(want[str(n)][k] - v) < 1e-9 for n, s in summary.items() for k, v in s.items()) else 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
