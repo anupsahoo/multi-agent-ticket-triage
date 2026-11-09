@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import random
 import sys
 from pathlib import Path
@@ -66,16 +67,26 @@ def kappa(m: dict) -> tuple[float, float, float]:
 
 
 def kappa_interval(judge, rows, n_boot=2000, seed=17) -> tuple[float, float]:
-    """Bootstrap 95% interval: resample the labelled replies, recompute kappa."""
+    """Bootstrap 95% interval: resample the labelled replies 2,000 times, recompute kappa,
+    keep the middle 95% (percentile method). A resample where kappa is undefined
+    (only one label in it) is skipped, not counted as zero."""
     rng = random.Random(seed)
     ks = []
     for _ in range(n_boot):
         sample = [rng.choice(rows) for _ in rows]
         m = confusion(judge, sample)
-        p_o, p_e, k = kappa(m) if kappa_defined(m) else (0, 0, 0.0)
-        ks.append(k)
+        if kappa_defined(m):
+            ks.append(kappa(m)[2])
     ks.sort()
-    return ks[int(0.025 * n_boot)], ks[int(0.975 * n_boot) - 1]
+    return ks[int(0.025 * len(ks))], ks[int(0.975 * len(ks)) - 1]
+
+
+def wilson(k: int, n: int) -> tuple[float, float]:
+    """95% interval for a rate of k out of n (Wilson score)."""
+    z, p = 1.96, k / n
+    mid = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return max(0.0, mid - half), min(1.0, mid + half)
 
 
 def kappa_defined(m) -> bool:
@@ -104,10 +115,14 @@ def main() -> int:
         print(f"                 judge good  judge bad")
         print(f"  human good     {m[('good','good')]:>10}  {m[('good','bad')]:>9}")
         print(f"  human bad      {m[('bad','good')]:>10}  {m[('bad','bad')]:>9}")
-        print(f"  agreement {p_o:.0%}   luck alone {p_e:.0%}   kappa {k:.2f}")
+        print(f"  agreement {p_o:.1%}   luck alone {p_e:.1%}   kappa {k:.2f}")
         print(f"  good replies passed {tpr:.0%}   bad replies caught {tnr:.0%}")
     lo, hi = kappa_interval(judge_v2, HELD)
     print(f"\nv2 held out kappa, 95% interval: {lo:.2f} to {hi:.2f}   bar: 0.70")
+    m = confusion(judge_v2, HELD)
+    bad = m[("bad", "good")] + m[("bad", "bad")]
+    clo, chi = wilson(m[("bad", "bad")], bad)
+    print(f"v2 held out bad replies caught: {m[('bad', 'bad')]} of {bad}, 95% interval {clo:.0%} to {chi:.0%}")
     print("\nwhere the judges went wrong")
     with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)

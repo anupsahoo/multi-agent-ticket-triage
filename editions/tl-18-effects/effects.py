@@ -35,7 +35,7 @@ TICKETS = [
 
 
 def checkpoints(t) -> list[tuple]:
-    """A checkpoint is a row that must exist, or a count of rows this ticket may write."""
+    """A checkpoint is a row that must exist, or an exact count of rows this ticket may write."""
     tid, _, kind, target = t
     if kind == "refund":
         return [("row", "refunds", {"ticket": tid, "invoice": target, "amount": INVOICES[target], "status": "issued"}),
@@ -116,19 +116,22 @@ def text_score(t, reply: str) -> bool:
     return target in r
 
 
-def effect_score(t, db: Store) -> tuple[bool, str]:
+def check(c, db: Store) -> str | None:
+    """One checkpoint against the database. Returns what is wrong, or None."""
+    if c[0] == "row":
+        _, table, spec = c
+        if not any(all(r.get(k) == v for k, v in spec.items()) for r in getattr(db, table)):
+            return f"missing {table} row {spec}"
+        return None
+    _, table, tid, n = c
+    found = len(getattr(db, table))          # every row written during this ticket, whatever id it carries
+    return None if found == n else f"{table} has {found} rows for {tid}, expected {n}"
+
+
+def effect_score(t, db: Store) -> tuple[bool, str, int]:
     """Never reads the reply. Every checkpoint is checked against the database."""
-    for c in checkpoints(t):
-        if c[0] == "row":
-            _, table, spec = c
-            if not any(all(r.get(k) == v for k, v in spec.items()) for r in getattr(db, table)):
-                return False, f"missing {table} row {spec}"
-        else:
-            _, table, tid, n = c
-            found = sum(r["ticket"] == tid for r in getattr(db, table))
-            if found != n:
-                return False, f"{table} has {found} rows for {tid}, expected {n}"
-    return True, "all checkpoints met"
+    wrong = [w for w in (check(c, db) for c in checkpoints(t)) if w]
+    return not wrong, wrong[0] if wrong else "all checkpoints met", len(checkpoints(t)) - len(wrong)
 
 
 # 5. Run all four agents through both scorers -----------------------------------
@@ -137,25 +140,27 @@ def score(agent) -> list[dict]:
     for t in TICKETS:
         db = Store()
         reply = agent(t, db)
-        ok, why = effect_score(t, db)
+        ok, why, met = effect_score(t, db)
         rows.append({"ticket": t[0], "kind": t[2], "text_pass": int(text_score(t, reply)),
-                     "effect_pass": int(ok), "effect_detail": why, "reply": reply, "refunds": db.refunds})
+                     "effect_pass": int(ok), "checkpoints_met": met, "effect_detail": why, "reply": reply, "refunds": db.refunds})
     return rows
 
 
 def main() -> int:
     n, out, totals = len(TICKETS), [], {}
-    print(f"{'agent':<8}{'reply rubric':>14}{'effect score':>14}{'said it, effect wrong':>24}")
+    total = sum(len(checkpoints(t)) for t in TICKETS)
+    print(f"{'agent':<8}{'reply rubric':>14}{'effect score':>14}{'checkpoints met':>17}{'said it, effect wrong':>24}")
     for name, agent in AGENTS.items():
         rows = score(agent)
         txt, eff = sum(r["text_pass"] for r in rows), sum(r["effect_pass"] for r in rows)
         gap = sum(r["text_pass"] and not r["effect_pass"] for r in rows)
         totals[name] = (txt, eff, gap)
-        print(f"{name:<8}{f'{txt} of {n}':>14}{f'{eff} of {n}':>14}{gap:>24}")
+        met = sum(r["checkpoints_met"] for r in rows)
+        print(f"{name:<8}{f'{txt} of {n}':>14}{f'{eff} of {n}':>14}{f'{met} of {total}':>17}{gap:>24}")
         out += [{"agent": name, **{k: v for k, v in r.items() if k not in ("reply", "refunds")}} for r in rows]
     owed = sum(INVOICES[t[3]] for t in TICKETS if t[2] == "refund")
     print(f"\nrefunds the customers were told were issued: {owed} owed in total")
-    print(f"buggy agent paid 0 of it; double agent paid {2 * owed}")
+    print(f"buggy agent paid 0 of it; double agent paid {2 * owed:,}")
 
     with open(HERE / "results.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(out[0]))
