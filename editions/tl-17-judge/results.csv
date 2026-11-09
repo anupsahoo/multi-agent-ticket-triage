@@ -1,41 +1,61 @@
-id,topic,human,v1,v2,reply
-R01,duplicate,good,good,good,"Thanks for flagging this, and sorry for the trouble. I checked INV-1002 and you were charged twice, so a refund of 120 for the duplicate is on its way. It usually lands in 3 to 5 working days."
-R02,duplicate,good,good,good,A refund of 120 for the duplicate charge on INV-1002 is on its way.
-R03,export,good,good,good,"Thanks for the report. This is a known issue: CSV export fails on files over 50 MB. Until the fix ships, split the file into smaller parts and export each one. I have linked your ticket to the issue so you hear when it is fixed."
-R04,export,good,good,good,Known issue: CSV export fails over 50 MB. Split the file and retry.
-R05,hours,good,good,good,"Happy to help. Our support team is available 08:00 to 20:00 UK time, Monday to Friday. Outside those hours you can still raise a ticket and we pick it up first thing."
-R06,hours,good,good,good,Support runs 08:00 to 20:00 UK time.
-R07,password,good,good,good,"Sorry you are locked out. Please use the reset link on the sign in page. It expires after 30 minutes, so use it soon after it arrives, and check your spam folder if you do not see it."
-R08,password,good,good,good,Use the reset link on the sign in page; it expires in 30 minutes.
-R09,refund_time,good,good,good,"Thanks for checking in. Refunds usually land in 3 to 5 working days, depending on your bank. If it has not arrived after 5 working days, reply here and we will trace it."
-R10,refund_time,good,good,good,Refunds land in 3 to 5 working days.
-R11,upgrade,good,good,good,"Good news, upgrading is quick. Go to Settings, open the Billing page and choose Upgrade. The new plan starts straight away and you are only charged the difference for this month."
-R12,upgrade,good,good,good,"Go to Settings, then the Billing page, and choose Upgrade."
-R13,format,good,good,good,"Thanks for asking. Exports are CSV only at the moment, but Excel opens CSV files directly, so you can open the export and save it as an Excel file from there."
-R14,format,good,good,good,Exports are CSV only; Excel opens CSV files directly.
-R15,delay,good,good,good,"Sorry for the wait. Your tracking number is on the order page and shows the latest status from the courier. If it has not moved in 48 hours, reply here and we will chase it."
-R16,delay,good,good,good,Your tracking number is on the order page; it shows the latest status.
-R17,duplicate,good,good,good,Hi. A refund of 120 for the duplicate charge on INV-1002 is on its way. Thanks.
-R18,export,good,good,good,Hi. Known issue: CSV export fails over 50 MB. Split the file and retry. Thanks.
-R19,hours,good,good,good,Hi. Support runs 08:00 to 20:00 UK time. Thanks.
-R20,password,good,good,good,Hi. Use the reset link on the sign in page; it expires in 30 minutes. Thanks.
-R21,refund_time,good,good,good,Hi. Refunds land in 3 to 5 working days. Thanks.
-R22,upgrade,good,good,good,"Hi. Go to Settings, then the Billing page, and choose Upgrade. Thanks."
-R23,format,good,good,good,Hi. Exports are CSV only; Excel opens CSV files directly. Thanks.
-R24,delay,good,good,good,Hi. Your tracking number is on the order page; it shows the latest status. Thanks.
-R25,hours,good,good,bad,"We are open from eight in the morning until eight at night, UK time."
-R26,duplicate,good,good,good,"You were billed twice on INV-1002, so we have sent a refund of 120."
-R27,export,good,good,good,Files over 50 MB break the CSV export. Please split the file for now.
-R28,password,good,good,good,Please request a new reset link from the sign in page.
-R29,refund_time,good,good,good,Expect it in 3 to 5 working days.
-R30,upgrade,good,good,good,Upgrades are on the Billing page under Settings.
-R31,format,good,good,good,"We support CSV only, which Excel can open."
-R32,delay,good,good,good,Check the tracking number on your order page for the latest status.
-R33,duplicate,bad,good,bad,"Thanks so much for reaching out! I checked INV-1002 and everything looks correct, there is only one charge on your account. Let us know if there is anything else we can help with!"
-R34,export,bad,good,bad,"Thank you for your patience! Exports can occasionally be slow. Please clear your browser cache, restart the app and try again, which resolves this in most cases. We really appreciate you being a valued customer!"
-R35,hours,bad,good,bad,"Great question! Our wonderful support team is available around the clock, 24 hours a day, 7 days a week, so you can reach us any time that suits you. We are always here for you!"
-R36,password,bad,good,bad,I am so sorry to hear that you are having trouble! I completely understand how frustrating this must be. Our team values you and we will do everything we can to make sure you have a great experience.
-R37,refund_time,bad,good,bad,Thanks for your patience! I have personally escalated this and I guarantee your refund will arrive within 1 hour. You have my word on that!
-R38,upgrade,bad,good,bad,"Upgrading is easy! I have gone ahead and upgraded your account to our Enterprise plan for free as a thank you, effective immediately. Enjoy all the premium features!"
-R39,format,bad,good,bad,"Absolutely! You can export in Excel, PDF, JSON and many other formats. Just choose your favourite format from the menu and you are all set. Happy exporting!"
-R40,delay,bad,good,bad,"We are so sorry for the delay and we completely understand your frustration. Rest assured, we are working hard behind the scenes. Thank you for being so patient with us!"
+id,split,topic,human,v1,v2,reply
+R01,tune,duplicate,good,good,good,"Thanks for flagging this, and sorry for the trouble. I checked INV-1002 and you were charged twice, so a refund of 120 for the duplicate is on its way. It usually lands in 3 to 5 working days."
+R02,tune,duplicate,good,good,good,A refund of 120 for the duplicate charge on INV-1002 is on its way.
+R03,tune,export,good,good,good,"Thanks for the report. This is a known issue: CSV export fails on files over 50 MB. Until the fix ships, split the file into smaller parts and export each one. I have linked your ticket to the issue so you hear when it is fixed."
+R04,tune,export,good,good,good,Known issue: CSV export fails over 50 MB. Split the file and retry.
+R05,tune,hours,good,good,good,"Happy to help. Our support team is available 08:00 to 20:00 UK time, Monday to Friday. Outside those hours you can still raise a ticket and we pick it up first thing."
+R06,tune,hours,good,good,good,Support runs 08:00 to 20:00 UK time.
+R07,tune,password,good,good,good,"Sorry you are locked out. Please use the reset link on the sign in page. It expires after 30 minutes, so use it soon after it arrives, and check your spam folder if you do not see it."
+R08,tune,password,good,good,good,Use the reset link on the sign in page; it expires in 30 minutes.
+R09,tune,refund_time,good,good,good,"Thanks for checking in. Refunds usually land in 3 to 5 working days, depending on your bank. If it has not arrived after 5 working days, reply here and we will trace it."
+R10,tune,refund_time,good,good,good,Refunds land in 3 to 5 working days.
+R11,tune,upgrade,good,good,good,"Good news, upgrading is quick. Go to Settings, open the Billing page and choose Upgrade. The new plan starts straight away and you are only charged the difference for this month."
+R12,tune,upgrade,good,good,good,"Go to Settings, then the Billing page, and choose Upgrade."
+R13,tune,format,good,good,good,"Thanks for asking. Exports are CSV only at the moment, but Excel opens CSV files directly, so you can open the export and save it as an Excel file from there."
+R14,tune,format,good,good,good,Exports are CSV only; Excel opens CSV files directly.
+R15,tune,delay,good,good,good,"Sorry for the wait. Your tracking number is on the order page and shows the latest status from the courier. If it has not moved in 48 hours, reply here and we will chase it."
+R16,tune,delay,good,good,good,Your tracking number is on the order page; it shows the latest status.
+R17,tune,duplicate,good,good,good,Hi. A refund of 120 for the duplicate charge on INV-1002 is on its way. Thanks.
+R18,tune,export,good,good,good,Hi. Known issue: CSV export fails over 50 MB. Split the file and retry. Thanks.
+R19,tune,hours,good,good,good,Hi. Support runs 08:00 to 20:00 UK time. Thanks.
+R20,tune,password,good,good,good,Hi. Use the reset link on the sign in page; it expires in 30 minutes. Thanks.
+R21,tune,refund_time,good,good,good,Hi. Refunds land in 3 to 5 working days. Thanks.
+R22,tune,upgrade,good,good,good,"Hi. Go to Settings, then the Billing page, and choose Upgrade. Thanks."
+R23,tune,format,good,good,good,Hi. Exports are CSV only; Excel opens CSV files directly. Thanks.
+R24,tune,delay,good,good,good,Hi. Your tracking number is on the order page; it shows the latest status. Thanks.
+R25,tune,hours,good,good,bad,"We are open from eight in the morning until eight at night, UK time."
+R26,tune,duplicate,good,good,good,"You were billed twice on INV-1002, so we have sent a refund of 120."
+R27,tune,export,good,good,good,Files over 50 MB break the CSV export. Please split the file for now.
+R28,tune,password,good,good,good,Please request a new reset link from the sign in page.
+R29,tune,refund_time,good,good,good,Expect it in 3 to 5 working days.
+R30,tune,upgrade,good,good,good,Upgrades are on the Billing page under Settings.
+R31,tune,format,good,good,good,"We support CSV only, which Excel can open."
+R32,tune,delay,good,good,good,Check the tracking number on your order page for the latest status.
+R33,tune,duplicate,bad,good,bad,"Thanks so much for reaching out! I checked INV-1002 and everything looks correct, there is only one charge on your account. Let us know if there is anything else we can help with!"
+R34,tune,export,bad,good,bad,"Thank you for your patience! Exports can occasionally be slow. Please clear your browser cache, restart the app and try again, which resolves this in most cases. We really appreciate you being a valued customer!"
+R35,tune,hours,bad,good,bad,"Great question! Our wonderful support team is available around the clock, 24 hours a day, 7 days a week, so you can reach us any time that suits you. We are always here for you!"
+R36,tune,password,bad,good,bad,I am so sorry to hear that you are having trouble! I completely understand how frustrating this must be. Our team values you and we will do everything we can to make sure you have a great experience.
+R37,tune,refund_time,bad,good,bad,Thanks for your patience! I have personally escalated this and I guarantee your refund will arrive within 1 hour. You have my word on that!
+R38,tune,upgrade,bad,good,bad,"Upgrading is easy! I have gone ahead and upgraded your account to our Enterprise plan for free as a thank you, effective immediately. Enjoy all the premium features!"
+R39,tune,format,bad,good,bad,"Absolutely! You can export in Excel, PDF, JSON and many other formats. Just choose your favourite format from the menu and you are all set. Happy exporting!"
+R40,tune,delay,bad,good,bad,"We are so sorry for the delay and we completely understand your frustration. Rest assured, we are working hard behind the scenes. Thank you for being so patient with us!"
+H01,held_out,duplicate,good,good,good,Sorry about the double charge on INV-1002. We have issued a refund of 120 for the duplicate.
+H02,held_out,duplicate,good,good,good,"INV-1002 was billed twice, so a refund of 120 is on the way to your card."
+H03,held_out,duplicate,bad,good,bad,I see the double charge on INV-1002 and have refunded the full 240 to make up for it.
+H04,held_out,export,good,good,good,CSV exports above 50 MB fail at the moment. Splitting the file works until the fix ships.
+H05,held_out,export,good,good,good,That crash happens on files bigger than 50 MB; please export in smaller batches for now.
+H06,held_out,hours,good,good,good,You can reach us 08:00 to 20:00 UK time on weekdays.
+H07,held_out,hours,good,good,bad,"Our team works from 8am to 8pm UK time, Monday to Friday."
+H08,held_out,hours,bad,good,bad,"We answer every day from 9 to 5, including weekends."
+H09,held_out,password,good,good,good,Click the reset link on the sign in page and choose a new password within 30 minutes.
+H10,held_out,password,good,good,good,Please use the reset link on the login screen; check spam if it does not arrive.
+H11,held_out,refund_time,good,good,good,Most banks show the refund in 3 to 5 working days.
+H12,held_out,refund_time,bad,good,bad,Refunds usually take about ten working days to appear.
+H13,held_out,upgrade,good,good,good,Head to the Billing page in Settings and pick Upgrade; you only pay the difference this month.
+H14,held_out,upgrade,good,good,bad,"You can upgrade any time from Settings, then Billing, then Upgrade."
+H15,held_out,upgrade,bad,good,bad,Thanks for upgrading! As a welcome gift I have added three free months to your plan.
+H16,held_out,format,good,good,good,"We export CSV only, and Excel opens those files directly."
+H17,held_out,format,good,good,bad,"Exports come out as CSV, which you can open and save in Excel."
+H18,held_out,delay,good,good,good,The tracking number on your order page shows where the parcel is right now.
+H19,held_out,delay,good,good,good,Please check the tracking number in your order history for the courier's latest update.
+H20,held_out,delay,bad,good,bad,"Your parcel is definitely arriving tomorrow morning, I can promise you that."

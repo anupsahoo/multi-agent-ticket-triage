@@ -54,6 +54,13 @@ def release_verdict(pass_hat_3: float) -> str:
     return "SHIP" if pass_hat_3 >= RELEASE_BAR else "DO NOT SHIP"
 
 
+def interval(per_task: list[float], n_boot: int = 2000, seed: int = 191) -> tuple[float, float]:
+    """Bootstrap 95% interval for the mean over tasks: is the gap to the bar just noise?"""
+    rng = random.Random(seed)
+    means = sorted(sum(rng.choice(per_task) for _ in per_task) / len(per_task) for _ in range(n_boot))
+    return means[int(0.025 * n_boot)], means[int(0.975 * n_boot) - 1]
+
+
 def main() -> int:
     rows = []
     for t in tasks:
@@ -117,7 +124,10 @@ def show(mode: str) -> int:
     p3 = sum(pass_hat_k(N_RUNS, c, 3) for c in c_all) / len(c_all)
     print(f"pass@1 {sum(c / N_RUNS for c in c_all) / len(c_all):.0%}   "
           f"pass@5 {sum(pass_at_k(N_RUNS, c, 5) for c in c_all) / len(c_all):.0%}   pass^3 {p3:.0%}")
-    print(f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(p3)}")
+    lo, hi = interval([pass_hat_k(N_RUNS, c, 3) for c in c_all])
+    print(f"pass^3 95% interval {lo:.0%} to {hi:.0%}")
+    print(f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(hi)} even at the top of the interval" if hi < RELEASE_BAR
+          else f"release bar pass^3 >= {RELEASE_BAR:.0%}: {release_verdict(p3)}")
     return 0
 
 
